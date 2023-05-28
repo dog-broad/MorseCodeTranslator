@@ -3,7 +3,7 @@ import java.util.HashMap;
 public class MorseCodeTranslator {
     public static void main(String[] args) {
         // Generate HashMap to store English to Morse Code translations
-        HashMap<String, String> englishToMorseCodeMap = new HashMap<String, String>();
+        HashMap<String, String> englishToMorseCodeMap = new HashMap<>();
         englishToMorseCodeMap.put("a", ".-");
         englishToMorseCodeMap.put("b", "-...");
         englishToMorseCodeMap.put("c", "-.-.");
@@ -51,7 +51,7 @@ public class MorseCodeTranslator {
         englishToMorseCodeMap.put(" ", "/");
 
         // Invert HashMap to store Morse Code to English translations
-        HashMap<String, String> morseCodeToEnglishMap = new HashMap<String, String>();
+        HashMap<String, String> morseCodeToEnglishMap = new HashMap<>();
         for (String key : englishToMorseCodeMap.keySet()) {
             morseCodeToEnglishMap.put(englishToMorseCodeMap.get(key), key);
         }

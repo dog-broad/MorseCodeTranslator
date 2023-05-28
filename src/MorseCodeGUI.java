@@ -1,7 +1,6 @@
 import com.formdev.flatlaf.FlatDarkLaf;
 
 import java.awt.*;
-import java.awt.event.*;
 import java.util.HashMap;
 import javax.swing.*;
 
@@ -17,9 +16,6 @@ public class MorseCodeGUI {
     // Generate JTextAreas for English to Morse Code and Morse Code to English
     JTextArea englishToMorseCodeTextArea = new JTextArea();
     JTextArea morseCodeToEnglishTextArea = new JTextArea();
-
-    // TranslationHelper is a class that contains methods to translate between English and Morse Code
-    TranslationHelper translationHelper = new TranslationHelper();
 
     // Constructor
     public MorseCodeGUI(HashMap<String, String> englishToMorseCodeMap, HashMap<String, String> morseCodeToEnglishMap) {
@@ -41,7 +37,7 @@ public class MorseCodeGUI {
 
         // Create JTabbedPane
         JTabbedPane tabbedPane = new JTabbedPane();
-        createEnglishToMorseCodePanel(tabbedPane);;
+        createEnglishToMorseCodePanel(tabbedPane);
         createMorseCodeToEnglishPanel(tabbedPane);
 
         // Add JTabbedPane to JFrame
@@ -68,15 +64,13 @@ public class MorseCodeGUI {
         englishToMorseCode.add(englishToMorseCodeButton, BorderLayout.SOUTH);
 
         // Add ActionListener to JButton
-        englishToMorseCodeButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                // Get text from englishToMorseCodeTextArea and translate it to Morse Code
-                String englishToMorseCodeText = englishToMorseCodeTextArea.getText();
-                String translatedText = TranslationHelper.translateEnglishToMorseCode(englishToMorseCodeText, englishToMorseCodeMap);
-                // Set morse code text area to translated text
-                morseCodeToEnglishTextArea.setText(translatedText);
-                showTranslationDialog(translatedText);
-            }
+        englishToMorseCodeButton.addActionListener(e -> {
+            // Get text from englishToMorseCodeTextArea and translate it to Morse Code
+            String englishToMorseCodeText = englishToMorseCodeTextArea.getText();
+            String translatedText = TranslationHelper.translateEnglishToMorseCode(englishToMorseCodeText, englishToMorseCodeMap);
+            // Set morse code text area to translated text
+            morseCodeToEnglishTextArea.setText(translatedText);
+            showTranslationDialog(translatedText);
         });
 
         // Add JPanel to JTabbedPane
@@ -103,15 +97,13 @@ public class MorseCodeGUI {
         morseCodeToEnglish.add(morseCodeToEnglishButton, BorderLayout.SOUTH);
 
         // Add ActionListener to JButton
-        morseCodeToEnglishButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                // Get text from morseCodeToEnglishTextArea and translate it to English
-                String morseCodeToEnglishText = morseCodeToEnglishTextArea.getText();
-                String translatedText = TranslationHelper.translateMorseCodeToEnglish(morseCodeToEnglishText, morseCodeToEnglishMap);
-                // set english text area to translated text
-                englishToMorseCodeTextArea.setText(translatedText);
-                showTranslationDialog(translatedText);
-            }
+        morseCodeToEnglishButton.addActionListener(e -> {
+            // Get text from morseCodeToEnglishTextArea and translate it to English
+            String morseCodeToEnglishText = morseCodeToEnglishTextArea.getText();
+            String translatedText = TranslationHelper.translateMorseCodeToEnglish(morseCodeToEnglishText, morseCodeToEnglishMap);
+            // set english text area to translated text
+            englishToMorseCodeTextArea.setText(translatedText);
+            showTranslationDialog(translatedText);
         });
 
         // Add JPanel to JTabbedPane
