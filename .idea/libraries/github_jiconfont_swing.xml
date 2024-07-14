@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="github.jiconfont.swing" type="repository">
+    <properties maven-id="com.github.jiconfont:jiconfont-swing:1.0.1" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/jiconfont/jiconfont-swing/1.0.1/jiconfont-swing-1.0.1.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/jiconfont/jiconfont/1.0.0/jiconfont-1.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

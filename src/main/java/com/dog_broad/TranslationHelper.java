@@ -1,3 +1,5 @@
+package com.dog_broad;
+
 import javax.sound.sampled.*;
 
 public class TranslationHelper {

@@ -1,3 +1,6 @@
+package com.dog_broad;
+
+import javax.swing.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,5 +45,9 @@ public class MorseCodeTranslator {
             }
         }
         return englishText.toString().trim();
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new MorseCodeGUI().setVisible(true));
     }
 }

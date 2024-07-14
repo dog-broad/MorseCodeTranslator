@@ -1,6 +1,8 @@
+package com.dog_broad;
+
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
-import com.github.pervoj.jiconfont.FontAwesomeRegular;
+import jiconfont.icons.font_awesome.FontAwesome;
 import jiconfont.swing.IconFontSwing;
 
 import javax.swing.*;
@@ -27,7 +29,7 @@ public class MorseCodeGUI extends JFrame {
     private boolean isDarkTheme = true;
 
     public MorseCodeGUI() {
-        IconFontSwing.register(FontAwesomeRegular.getIconFont());
+        IconFontSwing.register(FontAwesome.getIconFont());
 
         setTitle("Morse Code Translator");
         setSize(900, 600);
@@ -36,13 +38,13 @@ public class MorseCodeGUI extends JFrame {
 
         englishTextArea = new JTextArea();
         morseTextArea = new JTextArea();
-        translateToMorseButton = new JButton("Translate to Morse", IconFontSwing.buildIcon(FontAwesomeRegular.ARROW_ALT_CIRCLE_RIGHT, 18));
-        translateToEnglishButton = new JButton("Translate to English", IconFontSwing.buildIcon(FontAwesomeRegular.ARROW_ALT_CIRCLE_LEFT, 18));
-        playMorseButton = new JButton("Play Morse Code", IconFontSwing.buildIcon(FontAwesomeRegular.PLAY_CIRCLE, 18));
-        stopMorseButton = new JButton("Stop Morse Code", IconFontSwing.buildIcon(FontAwesomeRegular.STOP_CIRCLE, 18));
-        saveTextButton = new JButton("Save Text", IconFontSwing.buildIcon(FontAwesomeRegular.SAVE, 18));
-        saveMorseButton = new JButton("Save Morse", IconFontSwing.buildIcon(FontAwesomeRegular.SAVE, 18));
-        switchThemeButton = new JButton("Switch to Light Theme", IconFontSwing.buildIcon(FontAwesomeRegular.SUN, 18));
+        translateToMorseButton = new JButton("Translate to Morse", IconFontSwing.buildIcon(FontAwesome.ARROW_RIGHT, 18));
+        translateToEnglishButton = new JButton("Translate to English", IconFontSwing.buildIcon(FontAwesome.ARROW_LEFT, 18));
+        playMorseButton = new JButton("Play Morse Code", IconFontSwing.buildIcon(FontAwesome.PLAY, 18));
+        stopMorseButton = new JButton("Stop Morse Code", IconFontSwing.buildIcon(FontAwesome.STOP, 18));
+        saveTextButton = new JButton("Save Text", IconFontSwing.buildIcon(FontAwesome.FLOPPY_O, 18));
+        saveMorseButton = new JButton("Save Morse", IconFontSwing.buildIcon(FontAwesome.FLOPPY_O, 18));
+        switchThemeButton = new JButton("Switch to Light Theme", IconFontSwing.buildIcon(FontAwesome.SUN_O, 18));
 
         JLabel englishLabel = new JLabel("Plain Text");
         englishTextArea.setFont(new Font("SansSerif", Font.PLAIN, 18));
@@ -182,6 +184,32 @@ public class MorseCodeGUI extends JFrame {
         helpDialog.add(scrollPane, BorderLayout.CENTER);
 
         // Add collapsible Text to Morse Table
+        DefaultTableModel tableModel = getDefaultTableModel();
+
+        JTable table = new JTable(tableModel);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.getColumnModel().getColumn(0).setPreferredWidth(100); // Adjusting column width
+        table.getColumnModel().getColumn(1).setPreferredWidth(180); // Adjusting column width
+        table.setFont(new Font("Arial", Font.PLAIN, 12)); // Setting font size and style
+        // Center-align content of column 2
+        table.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                label.setFont(new Font("Monospaced", Font.PLAIN, 12));
+                return label;
+            }
+        });
+
+        JScrollPane tableScrollPane = new JScrollPane(table);
+        tableScrollPane.setBorder(BorderFactory.createTitledBorder("Text to Morse Table"));
+        tableScrollPane.setPreferredSize(new Dimension(300, 200));
+        helpDialog.add(tableScrollPane, BorderLayout.EAST);
+
+        helpDialog.setVisible(true);
+    }
+
+    private static DefaultTableModel getDefaultTableModel() {
         String[] columnNames = {"Character", "Morse Code"};
         Object[][] data = {
                 {'A', ".-"},
@@ -241,34 +269,12 @@ public class MorseCodeGUI extends JFrame {
         };
 
         // Create a non-editable table model
-        DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
+        return new DefaultTableModel(data, columnNames) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false; // Disable editing
             }
         };
-
-        JTable table = new JTable(tableModel);
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        table.getColumnModel().getColumn(0).setPreferredWidth(100); // Adjusting column width
-        table.getColumnModel().getColumn(1).setPreferredWidth(180); // Adjusting column width
-        table.setFont(new Font("Arial", Font.PLAIN, 12)); // Setting font size and style
-        // Center-align content of column 2
-        table.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                label.setHorizontalAlignment(SwingConstants.CENTER);
-                label.setFont(new Font("Monospaced", Font.PLAIN, 12));
-                return label;
-            }
-        });
-
-        JScrollPane tableScrollPane = new JScrollPane(table);
-        tableScrollPane.setBorder(BorderFactory.createTitledBorder("Text to Morse Table"));
-        tableScrollPane.setPreferredSize(new Dimension(300, 200));
-        helpDialog.add(tableScrollPane, BorderLayout.EAST);
-
-        helpDialog.setVisible(true);
     }
 
     private static JScrollPane getScrollPane() {
@@ -310,6 +316,10 @@ public class MorseCodeGUI extends JFrame {
         JMenu fileMenu = new JMenu("File");
         JMenuItem saveTextMenuItem = new JMenuItem("Save Text");
         JMenuItem saveMorseMenuItem = new JMenuItem("Save Morse");
+
+        saveTextMenuItem.addActionListener(e -> saveToFile(englishTextArea.getText(), "text.txt"));
+        saveMorseMenuItem.addActionListener(e -> saveToFile(morseTextArea.getText(), "morse.txt"));
+
         fileMenu.add(saveTextMenuItem);
         fileMenu.add(saveMorseMenuItem);
         menuBar.add(fileMenu);
@@ -373,23 +383,23 @@ public class MorseCodeGUI extends JFrame {
         if (isDarkTheme) {
             FlatLightLaf.setup();
             switchThemeButton.setText("Switch to Dark Theme");
-            switchThemeButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.MOON, 18));
-            translateToMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.ARROW_ALT_CIRCLE_RIGHT, 18, Color.BLACK));
-            translateToEnglishButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.ARROW_ALT_CIRCLE_LEFT, 18, Color.BLACK));
-            playMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.PLAY_CIRCLE, 18, Color.BLACK));
-            stopMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.STOP_CIRCLE, 18, Color.BLACK));
-            saveTextButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.SAVE, 18, Color.BLACK));
-            saveMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.SAVE, 18, Color.BLACK));
+            switchThemeButton.setIcon(IconFontSwing.buildIcon(FontAwesome.MOON_O, 18));
+            translateToMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesome.ARROW_RIGHT, 18, Color.BLACK));
+            translateToEnglishButton.setIcon(IconFontSwing.buildIcon(FontAwesome.ARROW_LEFT, 18, Color.BLACK));
+            playMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesome.PLAY_CIRCLE, 18, Color.BLACK));
+            stopMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesome.STOP_CIRCLE, 18, Color.BLACK));
+            saveTextButton.setIcon(IconFontSwing.buildIcon(FontAwesome.FLOPPY_O, 18, Color.BLACK));
+            saveMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesome.FLOPPY_O, 18, Color.BLACK));
         } else {
             FlatDarkLaf.setup();
             switchThemeButton.setText("Switch to Light Theme");
-            switchThemeButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.SUN, 18, Color.WHITE));
-            translateToMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.ARROW_ALT_CIRCLE_RIGHT, 18, Color.WHITE));
-            translateToEnglishButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.ARROW_ALT_CIRCLE_LEFT, 18, Color.WHITE));
-            playMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.PLAY_CIRCLE, 18, Color.WHITE));
-            stopMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.STOP_CIRCLE, 18, Color.WHITE));
-            saveTextButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.SAVE, 18, Color.WHITE));
-            saveMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.SAVE, 18, Color.WHITE));
+            switchThemeButton.setIcon(IconFontSwing.buildIcon(FontAwesome.SUN_O, 18, Color.WHITE));
+            translateToMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesome.ARROW_RIGHT, 18, Color.WHITE));
+            translateToEnglishButton.setIcon(IconFontSwing.buildIcon(FontAwesome.ARROW_LEFT, 18, Color.WHITE));
+            playMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesome.PLAY, 18, Color.WHITE));
+            stopMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesome.STOP_CIRCLE, 18, Color.WHITE));
+            saveTextButton.setIcon(IconFontSwing.buildIcon(FontAwesome.FLOPPY_O, 18, Color.WHITE));
+            saveMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesome.FLOPPY_O, 18, Color.WHITE));
         }
         isDarkTheme = !isDarkTheme;
         SwingUtilities.updateComponentTreeUI(this);
