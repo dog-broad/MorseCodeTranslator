@@ -31,7 +31,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: MorseCodeTranslator
-          path: target/MorseCodeTranslator.jar
+          path: target/MorseCodeTranslator.jar  # Ensure the correct path to your JAR file
 
   create_release:
     needs: build
@@ -40,6 +40,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2  # Ensure the repository is checked out
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: MorseCodeTranslator
+          path: target  # Ensure the correct path to download the artifact
 
       - name: Set up Git
         run: |
@@ -70,6 +76,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/MorseCodeTranslator.jar
+          asset_path: ./target/MorseCodeTranslator.jar  # Ensure the correct path to your JAR file
           asset_name: MorseCodeTranslator.jar
           asset_content_type: application/java-archive
