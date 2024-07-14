@@ -1,40 +1,71 @@
-import java.util.HashMap;
+import javax.sound.sampled.*;
 
 public class TranslationHelper {
-    public static String translateEnglishToMorseCode(String englishToMorseCodeText, HashMap<String, String> englishToMorseCodeMap) {
-        StringBuilder translatedText = new StringBuilder();
+    private static volatile boolean stopPlaying = false;
 
-        // Loop through each character in the text area and translate it to Morse Code
-        for (int i = 0; i < englishToMorseCodeText.length(); i++) {
-            String currentCharacter = englishToMorseCodeText.substring(i, i + 1);
-            // Get the Morse Code translation for the current character
-            String morseCodeTranslation = englishToMorseCodeMap.get(currentCharacter.toLowerCase());
+    private static float pitch = 1000f; // Default pitch in Hz
+    private static int dotDuration = 200; // Duration of a dot in ms
+    private static float volume = 0.5f; // Volume as a percentage
 
-            if (currentCharacter.equals(" ")) {
-                translatedText.append("/ ");
+    public static void playMorseSound(String morse) {
+        stopPlaying = false;
+        for (char c : morse.toCharArray()) {
+            if (stopPlaying) break;
+            if (c == '.') {
+                playDot();
+            } else if (c == '-') {
+                playDash();
             } else {
-                translatedText.append(morseCodeTranslation).append(" ");
+                try {
+                    Thread.sleep(dotDuration * 3L); // Space between letters
+                } catch (InterruptedException e) {
+                    System.out.println("Thread interrupted");
+                    System.out.println(e.getMessage());
+                }
             }
         }
-
-        return translatedText.toString();
     }
 
-    public static String translateMorseCodeToEnglish(String morseCodeToEnglishText, HashMap<String, String> morseCodeToEnglishMap) {
-        StringBuilder translatedText = new StringBuilder();
-        // Split the text area by spaces
-        String[] words = morseCodeToEnglishText.split(" ");
+    public static void stopPlaying() {
+        stopPlaying = true;
+    }
 
-        // Loop through each word in the text area and translate it to English
-        for (String currentWord : words) {
-            if (currentWord.equals("/")) {
-                translatedText.append(" ");
-            } else {
-                String englishTranslation = morseCodeToEnglishMap.get(currentWord);
-                translatedText.append(englishTranslation);
+    public static void setPitch(float pitch) {
+        TranslationHelper.pitch = pitch;
+    }
+
+    public static void setDotDuration(int duration) {
+        dotDuration = duration;
+    }
+
+    public static void setVolume(float volume) {
+        TranslationHelper.volume = volume;
+    }
+
+    private static void playDot() {
+        playTone(pitch, dotDuration);
+    }
+
+    private static void playDash() {
+        playTone(pitch, dotDuration * 3);
+    }
+
+    private static void playTone(float hz, int msecs) {
+        byte[] buf = new byte[1];
+        AudioFormat af = new AudioFormat(8000f, 8, 1, true, false);
+        try (SourceDataLine sdl = AudioSystem.getSourceDataLine(af)) {
+            sdl.open(af);
+            sdl.start();
+            for (int i = 0; i < msecs * 8 && !stopPlaying; i++) {
+                double angle = i / (8000f / hz) * 2.0 * Math.PI;
+                buf[0] = (byte) (Math.sin(angle) * 100 * volume);
+                sdl.write(buf, 0, 1);
             }
+            sdl.drain();
+            sdl.stop();
+        } catch (LineUnavailableException e) {
+            System.out.println("Line unavailable");
+            System.out.println(e.getMessage());
         }
-
-        return translatedText.toString();
     }
 }

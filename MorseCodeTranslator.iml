@@ -7,6 +7,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="flatlaf-3.1.1" level="project" />
+    <orderEntry type="library" name="flatlaf-3.4.1" level="project" />
+    <orderEntry type="library" name="github.jiconfont" level="project" />
+    <orderEntry type="library" name="jiconfont-1.0.0" level="project" />
   </component>
 </module>

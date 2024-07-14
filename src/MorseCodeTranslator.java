@@ -1,62 +1,46 @@
 import java.util.HashMap;
+import java.util.Map;
 
 public class MorseCodeTranslator {
-    public static void main(String[] args) {
-        // Generate HashMap to store English to Morse Code translations
-        HashMap<String, String> englishToMorseCodeMap = new HashMap<>();
-        englishToMorseCodeMap.put("a", ".-");
-        englishToMorseCodeMap.put("b", "-...");
-        englishToMorseCodeMap.put("c", "-.-.");
-        englishToMorseCodeMap.put("d", "-..");
-        englishToMorseCodeMap.put("e", ".");
-        englishToMorseCodeMap.put("f", "..-.");
-        englishToMorseCodeMap.put("g", "--.");
-        englishToMorseCodeMap.put("h", "....");
-        englishToMorseCodeMap.put("i", "..");
-        englishToMorseCodeMap.put("j", ".---");
-        englishToMorseCodeMap.put("k", "-.-");
-        englishToMorseCodeMap.put("l", ".-..");
-        englishToMorseCodeMap.put("m", "--");
-        englishToMorseCodeMap.put("n", "-.");
-        englishToMorseCodeMap.put("o", "---");
-        englishToMorseCodeMap.put("p", ".--.");
-        englishToMorseCodeMap.put("q", "--.-");
-        englishToMorseCodeMap.put("r", ".-.");
-        englishToMorseCodeMap.put("s", "...");
-        englishToMorseCodeMap.put("t", "-");
-        englishToMorseCodeMap.put("u", "..-");
-        englishToMorseCodeMap.put("v", "...-");
-        englishToMorseCodeMap.put("w", ".--");
-        englishToMorseCodeMap.put("x", "-..-");
-        englishToMorseCodeMap.put("y", "-.--");
-        englishToMorseCodeMap.put("z", "--..");
-        englishToMorseCodeMap.put("1", ".----");
-        englishToMorseCodeMap.put("2", "..---");
-        englishToMorseCodeMap.put("3", "...--");
-        englishToMorseCodeMap.put("4", "....-");
-        englishToMorseCodeMap.put("5", ".....");
-        englishToMorseCodeMap.put("6", "-....");
-        englishToMorseCodeMap.put("7", "--...");
-        englishToMorseCodeMap.put("8", "---..");
-        englishToMorseCodeMap.put("9", "----.");
-        englishToMorseCodeMap.put("0", "-----");
-        englishToMorseCodeMap.put(".", ".-.-.-");
-        englishToMorseCodeMap.put(",", "--..--");
-        englishToMorseCodeMap.put("?", "..--..");
-        englishToMorseCodeMap.put("!", "-.-.--");
-        englishToMorseCodeMap.put("/", "-..-.");
-        englishToMorseCodeMap.put("-", "-....-");
-        englishToMorseCodeMap.put("(", "-.--.");
-        englishToMorseCodeMap.put(")", "-.--.-");
-        englishToMorseCodeMap.put(" ", "/");
+    private static final Map<Character, String> englishToMorse = new HashMap<>();
+    private static final Map<String, Character> morseToEnglish = new HashMap<>();
 
-        // Invert HashMap to store Morse Code to English translations
-        HashMap<String, String> morseCodeToEnglishMap = new HashMap<>();
-        for (String key : englishToMorseCodeMap.keySet()) {
-            morseCodeToEnglishMap.put(englishToMorseCodeMap.get(key), key);
+    static {
+        // Initialize the mappings
+        String[] english = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.,?!'()&:;=+-_$@".split("");
+        String[] morse = {".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--",
+                "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--..", ".----",
+                "..---", "...--", "....-", ".....", "-....", "--...", "---..", "----.", "-----", ".-.-.-", "--..--",
+                "..--..", "-.-.--", ".-..-.", ".----.", "-.--.", "-.--.-", ".-...", "---...", "-.-.-.", "-...-",
+                ".-.-.", "-....-", "..--.-", "...-..-", ".--.-."};
+
+        for (int i = 0; i < english.length; i++) {
+            englishToMorse.put(english[i].charAt(0), morse[i]);
+            morseToEnglish.put(morse[i], english[i].charAt(0));
         }
+    }
 
-        MorseCodeGUI gui = new MorseCodeGUI(englishToMorseCodeMap, morseCodeToEnglishMap);
-        gui.show();
+    public static String toMorse(String englishText) {
+        StringBuilder morseText = new StringBuilder();
+        for (char c : englishText.toUpperCase().toCharArray()) {
+            if (englishToMorse.containsKey(c)) {
+                morseText.append(englishToMorse.get(c)).append(" ");
+            } else {
+                morseText.append(" ");
+            }
+        }
+        return morseText.toString().trim();
+    }
+
+    public static String toEnglish(String morseText) {
+        StringBuilder englishText = new StringBuilder();
+        for (String morseChar : morseText.split(" ")) {
+            if (morseToEnglish.containsKey(morseChar)) {
+                englishText.append(morseToEnglish.get(morseChar));
+            } else {
+                englishText.append(" ");
+            }
+        }
+        return englishText.toString().trim();
     }
 }

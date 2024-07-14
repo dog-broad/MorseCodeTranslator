@@ -1,0 +1,748 @@
+diff --git a/.idea/libraries/flatlaf_3_1_1.xml b/.idea/libraries/flatlaf_3_1_1.xml
+deleted file mode 100644
+index dc9f5c7..0000000
+--- a/.idea/libraries/flatlaf_3_1_1.xml
++++ /dev/null
+@@ -1,9 +0,0 @@
+-<component name="libraryTable">
+-  <library name="flatlaf-3.1.1">
+-    <CLASSES>
+-      <root url="jar://$USER_HOME$/Downloads/flatlaf-3.1.1.jar!/" />
+-    </CLASSES>
+-    <JAVADOC />
+-    <SOURCES />
+-  </library>
+-</component>
+\ No newline at end of file
+diff --git a/MorseCodeTranslator.iml b/MorseCodeTranslator.iml
+index c412663..ee6439b 100644
+--- a/MorseCodeTranslator.iml
++++ b/MorseCodeTranslator.iml
+@@ -7,6 +7,8 @@
+     </content>
+     <orderEntry type="inheritedJdk" />
+     <orderEntry type="sourceFolder" forTests="false" />
+-    <orderEntry type="library" name="flatlaf-3.1.1" level="project" />
++    <orderEntry type="library" name="flatlaf-3.4.1" level="project" />
++    <orderEntry type="library" name="github.jiconfont" level="project" />
++    <orderEntry type="library" name="jiconfont-1.0.0" level="project" />
+   </component>
+ </module>
+\ No newline at end of file
+diff --git a/src/MorseCodeGUI.java b/src/MorseCodeGUI.java
+index 9959c4b..a8094a7 100644
+--- a/src/MorseCodeGUI.java
++++ b/src/MorseCodeGUI.java
+@@ -1,121 +1,405 @@
+ import com.formdev.flatlaf.FlatDarkLaf;
++import com.formdev.flatlaf.FlatLightLaf;
++import com.github.pervoj.jiconfont.FontAwesomeRegular;
++import jiconfont.swing.IconFontSwing;
+ 
+-import java.awt.*;
+-import java.util.HashMap;
+ import javax.swing.*;
++import javax.swing.table.DefaultTableCellRenderer;
++import javax.swing.table.DefaultTableModel;
++import java.awt.*;
++import java.io.BufferedWriter;
++import java.io.FileWriter;
++import java.io.IOException;
+ 
+-public class MorseCodeGUI {
+-    // JFrame is a top-level container that contains all the components of a GUI
+-    private final JFrame frame;
+-
+-    // HashMap is a data structure that stores key-value pairs
+-    private final HashMap<String, String> englishToMorseCodeMap;
+-    private final HashMap<String, String> morseCodeToEnglishMap;
+-
+-    // JTextArea is a multi-line text component
+-    // Generate JTextAreas for English to Morse Code and Morse Code to English
+-    JTextArea englishToMorseCodeTextArea = new JTextArea();
+-    JTextArea morseCodeToEnglishTextArea = new JTextArea();
+-
+-    // Constructor
+-    public MorseCodeGUI(HashMap<String, String> englishToMorseCodeMap, HashMap<String, String> morseCodeToEnglishMap) {
+-        // Initialize HashMaps
+-        this.englishToMorseCodeMap = englishToMorseCodeMap;
+-        this.morseCodeToEnglishMap = morseCodeToEnglishMap;
+-
+-        // Set theme to Flat Dark
+-        try {
+-            UIManager.setLookAndFeel(new FlatDarkLaf());
+-        } catch (Exception e) {
+-            System.out.println("Error setting theme");
+-        }
++public class MorseCodeGUI extends JFrame {
++    private final JTextArea englishTextArea;
++    private final JTextArea morseTextArea;
++    private final JButton translateToMorseButton;
++    private final JButton translateToEnglishButton;
++    private final JButton playMorseButton;
++    private final JButton stopMorseButton;
++    private final JButton saveTextButton;
++    private final JButton saveMorseButton;
++    private final JButton switchThemeButton;
++    private JSlider speedSlider;
++    private JSlider pitchSlider;
++    private JSlider volumeSlider;
++    private boolean isDarkTheme = true;
+ 
+-        // Initialize JFrame
+-        frame = new JFrame("Morse Code Translator");
+-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+-        frame.setSize(500, 500);
++    public MorseCodeGUI() {
++        IconFontSwing.register(FontAwesomeRegular.getIconFont());
+ 
+-        // Create JTabbedPane
+-        JTabbedPane tabbedPane = new JTabbedPane();
+-        createEnglishToMorseCodePanel(tabbedPane);
+-        createMorseCodeToEnglishPanel(tabbedPane);
++        setTitle("Morse Code Translator");
++        setSize(900, 600);
++        setDefaultCloseOperation(EXIT_ON_CLOSE);
++        setLocationRelativeTo(null);
+ 
+-        // Add JTabbedPane to JFrame
+-        frame.add(tabbedPane);
+-    }
++        englishTextArea = new JTextArea();
++        morseTextArea = new JTextArea();
++        translateToMorseButton = new JButton("Translate to Morse", IconFontSwing.buildIcon(FontAwesomeRegular.ARROW_ALT_CIRCLE_RIGHT, 18));
++        translateToEnglishButton = new JButton("Translate to English", IconFontSwing.buildIcon(FontAwesomeRegular.ARROW_ALT_CIRCLE_LEFT, 18));
++        playMorseButton = new JButton("Play Morse Code", IconFontSwing.buildIcon(FontAwesomeRegular.PLAY_CIRCLE, 18));
++        stopMorseButton = new JButton("Stop Morse Code", IconFontSwing.buildIcon(FontAwesomeRegular.STOP_CIRCLE, 18));
++        saveTextButton = new JButton("Save Text", IconFontSwing.buildIcon(FontAwesomeRegular.SAVE, 18));
++        saveMorseButton = new JButton("Save Morse", IconFontSwing.buildIcon(FontAwesomeRegular.SAVE, 18));
++        switchThemeButton = new JButton("Switch to Light Theme", IconFontSwing.buildIcon(FontAwesomeRegular.SUN, 18));
++
++        JLabel englishLabel = new JLabel("Plain Text");
++        englishTextArea.setFont(new Font("SansSerif", Font.PLAIN, 18));
++        JLabel morseLabel = new JLabel("Morse Code");
++        morseTextArea.setFont(new Font("Monospaced", Font.PLAIN, 18));
++
++        setLayout(new BorderLayout());
++
++        JPanel topPanel = new JPanel(new GridLayout(1, 2));
++        addMenuBar(topPanel);
++        add(topPanel, BorderLayout.NORTH);
++
++        // Create panels to hold text areas and labels
++        JPanel englishPanel = new JPanel(new BorderLayout());
++        englishPanel.add(englishLabel, BorderLayout.NORTH);
++        englishTextArea.setLineWrap(true);
++        englishTextArea.setWrapStyleWord(true);
++        englishPanel.add(new JScrollPane(englishTextArea), BorderLayout.CENTER);
++
++        JPanel morsePanel = new JPanel(new BorderLayout());
++        morsePanel.add(morseLabel, BorderLayout.NORTH);
++        morseTextArea.setLineWrap(true);
++        morseTextArea.setWrapStyleWord(true);
++        morsePanel.add(new JScrollPane(morseTextArea), BorderLayout.CENTER);
++
++        // Add panels to the main layout
++        JPanel textPanel = new JPanel(new GridLayout(1, 2));
++        textPanel.add(englishPanel);
++        textPanel.add(morsePanel);
++        add(textPanel, BorderLayout.CENTER);
++
++        JPanel buttonPanel = new JPanel(new GridLayout(2, 3));
++        buttonPanel.add(translateToMorseButton);
++        buttonPanel.add(translateToEnglishButton);
++        buttonPanel.add(playMorseButton);
++        buttonPanel.add(stopMorseButton);
++        buttonPanel.add(saveTextButton);
++        buttonPanel.add(saveMorseButton);
++        buttonPanel.add(switchThemeButton);
++        add(buttonPanel, BorderLayout.SOUTH);
++
++        translateToMorseButton.addActionListener(e -> {
++            try {
++                String englishText = englishTextArea.getText();
++                String morseText = MorseCodeTranslator.toMorse(englishText);
++                morseTextArea.setText(morseText);
++            } catch (Exception ex) {
++                showErrorDialog("Error translating to Morse code: " + ex.getMessage());
++            }
++        });
++
++        translateToEnglishButton.addActionListener(e -> {
++            try {
++                String morseText = morseTextArea.getText();
++                String englishText = MorseCodeTranslator.toEnglish(morseText);
++                englishTextArea.setText(englishText);
++            } catch (Exception ex) {
++                showErrorDialog("Error translating to English: " + ex.getMessage());
++            }
++        });
++
++        playMorseButton.addActionListener(e -> {
++            try {
++                new Thread(() -> TranslationHelper.playMorseSound(morseTextArea.getText())).start();
++            } catch (Exception ex) {
++                showErrorDialog("Error playing Morse code sound: " + ex.getMessage());
++            }
++        });
++
++        stopMorseButton.addActionListener(e -> {
++            try {
++                TranslationHelper.stopPlaying();
++            } catch (Exception ex) {
++                showErrorDialog("Error stopping Morse code sound: " + ex.getMessage());
++            }
++        });
++
++        saveTextButton.addActionListener(e -> {
++            try {
++                saveToFile(englishTextArea.getText(), "text.txt");
++            } catch (Exception ex) {
++                showErrorDialog("Error saving text: " + ex.getMessage());
++            }
++        });
++
++        saveMorseButton.addActionListener(e -> {
++            try {
++                saveToFile(morseTextArea.getText(), "morse.txt");
++            } catch (Exception ex) {
++                showErrorDialog("Error saving Morse code: " + ex.getMessage());
++            }
++        });
++
++        switchThemeButton.addActionListener(e -> {
++            try {
++                switchTheme();
++            } catch (Exception ex) {
++                showErrorDialog("Error switching theme: " + ex.getMessage());
++            }
++        });
++
++        speedSlider.addChangeListener(e -> {
++            try {
++                TranslationHelper.setDotDuration(speedSlider.getValue());
++            } catch (Exception ex) {
++                showErrorDialog("Error setting speed: " + ex.getMessage());
++            }
++        });
++
++        pitchSlider.addChangeListener(e -> {
++            try {
++                TranslationHelper.setPitch(pitchSlider.getValue());
++            } catch (Exception ex) {
++                showErrorDialog("Error setting pitch: " + ex.getMessage());
++            }
++        });
+ 
+-    private void createEnglishToMorseCodePanel(JTabbedPane tabbedPane) {
+-        // Create JPanel with BorderLayout (top, bottom, left, right, center)
+-        JPanel englishToMorseCode = new JPanel();
+-        englishToMorseCode.setLayout(new BorderLayout());
+-
+-        // Create JLabel with centered text
+-        JLabel englishToMorseCodeLabel = new JLabel("English to Morse Code");
+-        englishToMorseCodeLabel.setHorizontalAlignment(JLabel.CENTER);
+-        englishToMorseCode.add(englishToMorseCodeLabel, BorderLayout.NORTH);
+-
+-        // Set JTextArea to wrap text
+-        englishToMorseCodeTextArea.setLineWrap(true);
+-        englishToMorseCodeTextArea.setWrapStyleWord(true);
+-        englishToMorseCode.add(englishToMorseCodeTextArea, BorderLayout.CENTER);
+-
+-        // Create JButton with text "Translate"
+-        JButton englishToMorseCodeButton = new JButton("Translate");
+-        englishToMorseCode.add(englishToMorseCodeButton, BorderLayout.SOUTH);
+-
+-        // Add ActionListener to JButton
+-        englishToMorseCodeButton.addActionListener(e -> {
+-            // Get text from englishToMorseCodeTextArea and translate it to Morse Code
+-            String englishToMorseCodeText = englishToMorseCodeTextArea.getText();
+-            String translatedText = TranslationHelper.translateEnglishToMorseCode(englishToMorseCodeText, englishToMorseCodeMap);
+-            // Set morse code text area to translated text
+-            morseCodeToEnglishTextArea.setText(translatedText);
+-            showTranslationDialog(translatedText);
++        volumeSlider.addChangeListener(e -> {
++            try {
++                TranslationHelper.setVolume(volumeSlider.getValue() / 100f);
++            } catch (Exception ex) {
++                showErrorDialog("Error setting volume: " + ex.getMessage());
++            }
+         });
+ 
+-        // Add JPanel to JTabbedPane
+-        tabbedPane.addTab("English to Morse Code", englishToMorseCode);
++        // Set initial theme
++        switchTheme();
+     }
+ 
+-    private void createMorseCodeToEnglishPanel(JTabbedPane tabbedPane) {
+-        // Create JPanel with BorderLayout (top, bottom, left, right, center)
+-        JPanel morseCodeToEnglish = new JPanel();
+-        morseCodeToEnglish.setLayout(new BorderLayout());
+-
+-        // Create JLabel with centered text
+-        JLabel morseCodeToEnglishLabel = new JLabel("Morse Code to English");
+-        morseCodeToEnglishLabel.setHorizontalAlignment(JLabel.CENTER);
+-        morseCodeToEnglish.add(morseCodeToEnglishLabel, BorderLayout.NORTH);
+-
+-        // Set JTextArea to wrap text
+-        morseCodeToEnglishTextArea.setLineWrap(true);
+-        morseCodeToEnglishTextArea.setWrapStyleWord(true);
+-        morseCodeToEnglish.add(morseCodeToEnglishTextArea, BorderLayout.CENTER);
+-
+-        // Create JButton with text "Translate"
+-        JButton morseCodeToEnglishButton = new JButton("Translate");
+-        morseCodeToEnglish.add(morseCodeToEnglishButton, BorderLayout.SOUTH);
+-
+-        // Add ActionListener to JButton
+-        morseCodeToEnglishButton.addActionListener(e -> {
+-            // Get text from morseCodeToEnglishTextArea and translate it to English
+-            String morseCodeToEnglishText = morseCodeToEnglishTextArea.getText();
+-            String translatedText = TranslationHelper.translateMorseCodeToEnglish(morseCodeToEnglishText, morseCodeToEnglishMap);
+-            // set english text area to translated text
+-            englishToMorseCodeTextArea.setText(translatedText);
+-            showTranslationDialog(translatedText);
++    private void createHelpDialog() {
++        JDialog helpDialog = new JDialog(this, "Help", true);
++        helpDialog.setSize(800, 400);
++        helpDialog.setLayout(new BorderLayout());
++
++        // Create a JTextArea to explain features
++        JScrollPane scrollPane = getScrollPane();
++        helpDialog.add(scrollPane, BorderLayout.CENTER);
++
++        // Add collapsible Text to Morse Table
++        String[] columnNames = {"Character", "Morse Code"};
++        Object[][] data = {
++                {'A', ".-"},
++                {'B', "-..."},
++                {'C', "-.-."},
++                {'D', "-.."},
++                {'E', "."},
++                {'F', "..-."},
++                {'G', "--."},
++                {'H', "...."},
++                {'I', ".."},
++                {'J', ".---"},
++                {'K', "-.-"},
++                {'L', ".-.."},
++                {'M', "--"},
++                {'N', "-."},
++                {'O', "---"},
++                {'P', ".--."},
++                {'Q', "--.-"},
++                {'R', ".-."},
++                {'S', "..."},
++                {'T', "-"},
++                {'U', "..-"},
++                {'V', "...-"},
++                {'W', ".--"},
++                {'X', "-..-"},
++                {'Y', "-.--"},
++                {'Z', "--.."},
++                {'0', "-----"},
++                {'1', ".----"},
++                {'2', "..---"},
++                {'3', "...--"},
++                {'4', "....-"},
++                {'5', "....."},
++                {'6', "-...."},
++                {'7', "--..."},
++                {'8', "---.."},
++                {'9', "----."},
++                {' ', "/"},  // Space in Morse code
++                {'.', ".-.-.-"},  // Period
++                {',', "--..--"},  // Comma
++                {'?', "..--.."},  // Question mark
++                {'!', "-.-.--"},  // Exclamation mark
++                {'"', ".-..-."},  // Double quote
++                {'\'', ".----."},  // Single quote or apostrophe
++                {'(', "-.--."},  // Left parenthesis
++                {')', "-.--.-"},  // Right parenthesis
++                {'&', ".-..."},  // Ampersand
++                {':', "---..."},  // Colon
++                {';', "-.-.-."},  // Semicolon
++                {'=', "-...-"},  // Equal sign
++                {'+', ".-.-."},  // Plus sign
++                {'-', "-....-"},  // Hyphen or dash
++                {'_', "..--.-"},  // Underscore
++                {'$', "...-..-"},  // Dollar sign
++                {'@', ".--.-."}  // At symbol
++        };
++
++        // Create a non-editable table model
++        DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
++            @Override
++            public boolean isCellEditable(int row, int column) {
++                return false; // Disable editing
++            }
++        };
++
++        JTable table = new JTable(tableModel);
++        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
++        table.getColumnModel().getColumn(0).setPreferredWidth(100); // Adjusting column width
++        table.getColumnModel().getColumn(1).setPreferredWidth(180); // Adjusting column width
++        table.setFont(new Font("Arial", Font.PLAIN, 12)); // Setting font size and style
++        // Center-align content of column 2
++        table.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
++            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
++                JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
++                label.setHorizontalAlignment(SwingConstants.CENTER);
++                label.setFont(new Font("Monospaced", Font.PLAIN, 12));
++                return label;
++            }
+         });
+ 
+-        // Add JPanel to JTabbedPane
+-        tabbedPane.addTab("Morse Code to English", morseCodeToEnglish);
++        JScrollPane tableScrollPane = new JScrollPane(table);
++        tableScrollPane.setBorder(BorderFactory.createTitledBorder("Text to Morse Table"));
++        tableScrollPane.setPreferredSize(new Dimension(300, 200));
++        helpDialog.add(tableScrollPane, BorderLayout.EAST);
++
++        helpDialog.setVisible(true);
++    }
++
++    private static JScrollPane getScrollPane() {
++        JEditorPane helpText = new JEditorPane();
++        helpText.setContentType("text/html");
++        helpText.setEditable(false);
++        helpText.setText("<html><body style='font-family: Arial, sans-serif; font-size: 14px;'>"
++                + "<h1>Welcome to Morse Code Translator!</h1>"
++                + "<p>This application allows you to translate between English text and Morse code.</p>"
++                + "<h2>Features:</h2>"
++                + "<ul>"
++                + "<li><b>Translate to Morse:</b> Converts the entered English text into Morse code.</li>"
++                + "<li><b>Translate to English:</b> Converts the entered Morse code into English text.</li>"
++                + "<li><b>Play Morse Code:</b> Plays the Morse code audio using sound.</li>"
++                + "<li><b>Stop Morse Code:</b> Stops the currently playing Morse code audio.</li>"
++                + "<li><b>Save Text/Morse:</b> Saves the entered text or Morse code to a text file.</li>"
++                + "<li><b>Switch Theme:</b> Toggles between light and dark themes for the application.</li>"
++                + "</ul>"
++                + "<h2>Usage:</h2>"
++                + "<ul>"
++                + "<li>Enter text in the 'Plain Text' area and click 'Translate to Morse'.</li>"
++                + "<li>Enter Morse code in the 'Morse Code' area and click 'Translate to English'.</li>"
++                + "<li>Adjust settings like speed, pitch, and volume from the 'Settings' menu.</li>"
++                + "<li>Use the 'Save' buttons to save your work.</li>"
++                + "<li>Enjoy translating and learning Morse code!</li>"
++                + "</ul>"
++                + "</body></html>");
++
++        JScrollPane scrollPane = new JScrollPane(helpText);
++        scrollPane.setPreferredSize(new Dimension(600, 400));
++
++        return scrollPane;
++    }
++
++    private void addMenuBar(JPanel topPanel) {
++        JMenuBar menuBar = new JMenuBar();
++
++        // File menu
++        JMenu fileMenu = new JMenu("File");
++        JMenuItem saveTextMenuItem = new JMenuItem("Save Text");
++        JMenuItem saveMorseMenuItem = new JMenuItem("Save Morse");
++        fileMenu.add(saveTextMenuItem);
++        fileMenu.add(saveMorseMenuItem);
++        menuBar.add(fileMenu);
++
++        // Settings menu
++        JMenu settingsMenu = new JMenu("Settings");
++
++        speedSlider = createSlider("Speed", 50, 400, 200);
++        pitchSlider = createSlider("Pitch", 500, 2000, 1000);
++        volumeSlider = createSlider("Volume", 0, 100, 50);
++
++        settingsMenu.add(createSliderPanel("Speed", speedSlider, "ms"));
++        settingsMenu.add(createSliderPanel("Pitch", pitchSlider, "Hz"));
++        settingsMenu.add(createSliderPanel("Volume", volumeSlider, "%"));
++        menuBar.add(settingsMenu);
++
++        // Help menu
++        JMenu helpMenu = new JMenu("Help");
++        JMenuItem helpMenuItem = new JMenuItem("Help Contents");
++        helpMenuItem.addActionListener(e -> createHelpDialog());
++        helpMenu.add(helpMenuItem);
++        menuBar.add(helpMenu);
++
++        topPanel.add(menuBar);
++    }
++
++
++    private JSlider createSlider(String pitch, int min, int max, int value) {
++        JSlider slider = new JSlider(min, max, value);
++        slider.setMajorTickSpacing((max - min) / 5);
++        slider.setPaintTicks(true);
++        slider.setPaintLabels(true);
++        return slider;
++    }
++
++    private JPanel createSliderPanel(String name, JSlider slider, String unit) {
++        JPanel panel = new JPanel(new BorderLayout());
++        panel.add(new JLabel(name), BorderLayout.WEST);
++        panel.add(slider, BorderLayout.CENTER);
++        panel.add(new JLabel(unit), BorderLayout.EAST);
++        return panel;
++    }
++
++    private void saveToFile(String content, String defaultFileName) {
++        JFileChooser fileChooser = new JFileChooser();
++        fileChooser.setSelectedFile(new java.io.File(defaultFileName));
++        int userSelection = fileChooser.showSaveDialog(this);
++
++        if (userSelection == JFileChooser.APPROVE_OPTION) {
++            java.io.File fileToSave = fileChooser.getSelectedFile();
++            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileToSave))) {
++                writer.write(content);
++                JOptionPane.showMessageDialog(this, "File saved: " + fileToSave.getAbsolutePath());
++            } catch (IOException e) {
++                showErrorDialog("Error saving file: " + e.getMessage());
++            }
++        }
++    }
++
++    private void switchTheme() {
++        if (isDarkTheme) {
++            FlatLightLaf.setup();
++            switchThemeButton.setText("Switch to Dark Theme");
++            switchThemeButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.MOON, 18));
++            translateToMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.ARROW_ALT_CIRCLE_RIGHT, 18, Color.BLACK));
++            translateToEnglishButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.ARROW_ALT_CIRCLE_LEFT, 18, Color.BLACK));
++            playMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.PLAY_CIRCLE, 18, Color.BLACK));
++            stopMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.STOP_CIRCLE, 18, Color.BLACK));
++            saveTextButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.SAVE, 18, Color.BLACK));
++            saveMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.SAVE, 18, Color.BLACK));
++        } else {
++            FlatDarkLaf.setup();
++            switchThemeButton.setText("Switch to Light Theme");
++            switchThemeButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.SUN, 18, Color.WHITE));
++            translateToMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.ARROW_ALT_CIRCLE_RIGHT, 18, Color.WHITE));
++            translateToEnglishButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.ARROW_ALT_CIRCLE_LEFT, 18, Color.WHITE));
++            playMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.PLAY_CIRCLE, 18, Color.WHITE));
++            stopMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.STOP_CIRCLE, 18, Color.WHITE));
++            saveTextButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.SAVE, 18, Color.WHITE));
++            saveMorseButton.setIcon(IconFontSwing.buildIcon(FontAwesomeRegular.SAVE, 18, Color.WHITE));
++        }
++        isDarkTheme = !isDarkTheme;
++        SwingUtilities.updateComponentTreeUI(this);
+     }
+ 
+-    private void showTranslationDialog(String translatedText) {
+-        // Show dialog with translated text
+-        JOptionPane.showMessageDialog(frame, translatedText);
++    private void showErrorDialog(String message) {
++        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+     }
+ 
+-    public void show() {
+-        frame.setVisible(true);
++    public static void main(String[] args) {
++        SwingUtilities.invokeLater(() -> new MorseCodeGUI().setVisible(true));
+     }
+ }
+diff --git a/src/MorseCodeTranslator.java b/src/MorseCodeTranslator.java
+index 39706e5..df56ba0 100644
+--- a/src/MorseCodeTranslator.java
++++ b/src/MorseCodeTranslator.java
+@@ -1,62 +1,46 @@
+ import java.util.HashMap;
++import java.util.Map;
+ 
+ public class MorseCodeTranslator {
+-    public static void main(String[] args) {
+-        // Generate HashMap to store English to Morse Code translations
+-        HashMap<String, String> englishToMorseCodeMap = new HashMap<>();
+-        englishToMorseCodeMap.put("a", ".-");
+-        englishToMorseCodeMap.put("b", "-...");
+-        englishToMorseCodeMap.put("c", "-.-.");
+-        englishToMorseCodeMap.put("d", "-..");
+-        englishToMorseCodeMap.put("e", ".");
+-        englishToMorseCodeMap.put("f", "..-.");
+-        englishToMorseCodeMap.put("g", "--.");
+-        englishToMorseCodeMap.put("h", "....");
+-        englishToMorseCodeMap.put("i", "..");
+-        englishToMorseCodeMap.put("j", ".---");
+-        englishToMorseCodeMap.put("k", "-.-");
+-        englishToMorseCodeMap.put("l", ".-..");
+-        englishToMorseCodeMap.put("m", "--");
+-        englishToMorseCodeMap.put("n", "-.");
+-        englishToMorseCodeMap.put("o", "---");
+-        englishToMorseCodeMap.put("p", ".--.");
+-        englishToMorseCodeMap.put("q", "--.-");
+-        englishToMorseCodeMap.put("r", ".-.");
+-        englishToMorseCodeMap.put("s", "...");
+-        englishToMorseCodeMap.put("t", "-");
+-        englishToMorseCodeMap.put("u", "..-");
+-        englishToMorseCodeMap.put("v", "...-");
+-        englishToMorseCodeMap.put("w", ".--");
+-        englishToMorseCodeMap.put("x", "-..-");
+-        englishToMorseCodeMap.put("y", "-.--");
+-        englishToMorseCodeMap.put("z", "--..");
+-        englishToMorseCodeMap.put("1", ".----");
+-        englishToMorseCodeMap.put("2", "..---");
+-        englishToMorseCodeMap.put("3", "...--");
+-        englishToMorseCodeMap.put("4", "....-");
+-        englishToMorseCodeMap.put("5", ".....");
+-        englishToMorseCodeMap.put("6", "-....");
+-        englishToMorseCodeMap.put("7", "--...");
+-        englishToMorseCodeMap.put("8", "---..");
+-        englishToMorseCodeMap.put("9", "----.");
+-        englishToMorseCodeMap.put("0", "-----");
+-        englishToMorseCodeMap.put(".", ".-.-.-");
+-        englishToMorseCodeMap.put(",", "--..--");
+-        englishToMorseCodeMap.put("?", "..--..");
+-        englishToMorseCodeMap.put("!", "-.-.--");
+-        englishToMorseCodeMap.put("/", "-..-.");
+-        englishToMorseCodeMap.put("-", "-....-");
+-        englishToMorseCodeMap.put("(", "-.--.");
+-        englishToMorseCodeMap.put(")", "-.--.-");
+-        englishToMorseCodeMap.put(" ", "/");
++    private static final Map<Character, String> englishToMorse = new HashMap<>();
++    private static final Map<String, Character> morseToEnglish = new HashMap<>();
+ 
+-        // Invert HashMap to store Morse Code to English translations
+-        HashMap<String, String> morseCodeToEnglishMap = new HashMap<>();
+-        for (String key : englishToMorseCodeMap.keySet()) {
+-            morseCodeToEnglishMap.put(englishToMorseCodeMap.get(key), key);
++    static {
++        // Initialize the mappings
++        String[] english = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.,?!'()&:;=+-_$@".split("");
++        String[] morse = {".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--",
++                "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--..", ".----",
++                "..---", "...--", "....-", ".....", "-....", "--...", "---..", "----.", "-----", ".-.-.-", "--..--",
++                "..--..", "-.-.--", ".-..-.", ".----.", "-.--.", "-.--.-", ".-...", "---...", "-.-.-.", "-...-",
++                ".-.-.", "-....-", "..--.-", "...-..-", ".--.-."};
++
++        for (int i = 0; i < english.length; i++) {
++            englishToMorse.put(english[i].charAt(0), morse[i]);
++            morseToEnglish.put(morse[i], english[i].charAt(0));
++        }
++    }
++
++    public static String toMorse(String englishText) {
++        StringBuilder morseText = new StringBuilder();
++        for (char c : englishText.toUpperCase().toCharArray()) {
++            if (englishToMorse.containsKey(c)) {
++                morseText.append(englishToMorse.get(c)).append(" ");
++            } else {
++                morseText.append(" ");
++            }
+         }
++        return morseText.toString().trim();
++    }
+ 
+-        MorseCodeGUI gui = new MorseCodeGUI(englishToMorseCodeMap, morseCodeToEnglishMap);
+-        gui.show();
++    public static String toEnglish(String morseText) {
++        StringBuilder englishText = new StringBuilder();
++        for (String morseChar : morseText.split(" ")) {
++            if (morseToEnglish.containsKey(morseChar)) {
++                englishText.append(morseToEnglish.get(morseChar));
++            } else {
++                englishText.append(" ");
++            }
++        }
++        return englishText.toString().trim();
+     }
+ }
+diff --git a/src/TranslationHelper.java b/src/TranslationHelper.java
+index 46422c5..bd0a52b 100644
+--- a/src/TranslationHelper.java
++++ b/src/TranslationHelper.java
+@@ -1,40 +1,71 @@
+-import java.util.HashMap;
++import javax.sound.sampled.*;
+ 
+ public class TranslationHelper {
+-    public static String translateEnglishToMorseCode(String englishToMorseCodeText, HashMap<String, String> englishToMorseCodeMap) {
+-        StringBuilder translatedText = new StringBuilder();
++    private static volatile boolean stopPlaying = false;
+ 
+-        // Loop through each character in the text area and translate it to Morse Code
+-        for (int i = 0; i < englishToMorseCodeText.length(); i++) {
+-            String currentCharacter = englishToMorseCodeText.substring(i, i + 1);
+-            // Get the Morse Code translation for the current character
+-            String morseCodeTranslation = englishToMorseCodeMap.get(currentCharacter.toLowerCase());
++    private static float pitch = 1000f; // Default pitch in Hz
++    private static int dotDuration = 200; // Duration of a dot in ms
++    private static float volume = 0.5f; // Volume as a percentage
+ 
+-            if (currentCharacter.equals(" ")) {
+-                translatedText.append("/ ");
++    public static void playMorseSound(String morse) {
++        stopPlaying = false;
++        for (char c : morse.toCharArray()) {
++            if (stopPlaying) break;
++            if (c == '.') {
++                playDot();
++            } else if (c == '-') {
++                playDash();
+             } else {
+-                translatedText.append(morseCodeTranslation).append(" ");
++                try {
++                    Thread.sleep(dotDuration * 3L); // Space between letters
++                } catch (InterruptedException e) {
++                    System.out.println("Thread interrupted");
++                    System.out.println(e.getMessage());
++                }
+             }
+         }
++    }
+ 
+-        return translatedText.toString();
++    public static void stopPlaying() {
++        stopPlaying = true;
+     }
+ 
+-    public static String translateMorseCodeToEnglish(String morseCodeToEnglishText, HashMap<String, String> morseCodeToEnglishMap) {
+-        StringBuilder translatedText = new StringBuilder();
+-        // Split the text area by spaces
+-        String[] words = morseCodeToEnglishText.split(" ");
++    public static void setPitch(float pitch) {
++        TranslationHelper.pitch = pitch;
++    }
+ 
+-        // Loop through each word in the text area and translate it to English
+-        for (String currentWord : words) {
+-            if (currentWord.equals("/")) {
+-                translatedText.append(" ");
+-            } else {
+-                String englishTranslation = morseCodeToEnglishMap.get(currentWord);
+-                translatedText.append(englishTranslation);
++    public static void setDotDuration(int duration) {
++        dotDuration = duration;
++    }
++
++    public static void setVolume(float volume) {
++        TranslationHelper.volume = volume;
++    }
++
++    private static void playDot() {
++        playTone(pitch, dotDuration);
++    }
++
++    private static void playDash() {
++        playTone(pitch, dotDuration * 3);
++    }
++
++    private static void playTone(float hz, int msecs) {
++        byte[] buf = new byte[1];
++        AudioFormat af = new AudioFormat(8000f, 8, 1, true, false);
++        try (SourceDataLine sdl = AudioSystem.getSourceDataLine(af)) {
++            sdl.open(af);
++            sdl.start();
++            for (int i = 0; i < msecs * 8 && !stopPlaying; i++) {
++                double angle = i / (8000f / hz) * 2.0 * Math.PI;
++                buf[0] = (byte) (Math.sin(angle) * 100 * volume);
++                sdl.write(buf, 0, 1);
+             }
++            sdl.drain();
++            sdl.stop();
++        } catch (LineUnavailableException e) {
++            System.out.println("Line unavailable");
++            System.out.println(e.getMessage());
+         }
+-
+-        return translatedText.toString();
+     }
+ }
