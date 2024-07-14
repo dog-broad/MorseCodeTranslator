@@ -21,7 +21,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
-          java-version: '11'  # or '21' if using Zulu JDK 21
+          java-version: '21'
           distribution: 'zulu'  # Use 'zulu' for Zulu JDK
 
       - name: Build with Maven
@@ -33,7 +33,7 @@ jobs:
           name: MorseCodeTranslator
           path: target/MorseCodeTranslator.jar
 
-  release:
+  create_release:
     needs: build
     runs-on: ubuntu-latest
     
@@ -44,14 +44,25 @@ jobs:
           name: MorseCodeTranslator
           path: target
       
+      - name: Set up Git
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+      
+      - name: Create Tag
+        id: create_tag
+        run: |
+          git tag v1.0.${{ github.run_number }}
+          git push --tags
+      
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}  # Use the full tag reference
-          release_name: Release ${{ github.ref_name }}  # Name your release
+          tag_name: v1.0.${{ github.run_number }}  # Use the newly created tag
+          release_name: Release v1.0.${{ github.run_number }}  # Name your release
           draft: false
           prerelease: false
       
