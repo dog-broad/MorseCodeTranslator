@@ -21,8 +21,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
-          java-version: '21'  # Use Zulu JDK 21
-          distribution: 'zulu'
+          java-version: '11'  # or '21' if using Zulu JDK 21
+          distribution: 'zulu'  # Use 'zulu' for Zulu JDK
 
       - name: Build with Maven
         run: mvn -B package --file pom.xml
@@ -50,8 +50,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref }}  # Use the full tag reference
+          release_name: Release ${{ github.ref_name }}  # Name your release
           draft: false
           prerelease: false
       
