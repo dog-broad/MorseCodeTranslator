@@ -12,13 +12,19 @@ Morse Code Translator is a Java Swing application that enables users to translat
 
 ## Screenshots 🖼️
 
-<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-    <img src="img/2024-07-14-19-23-19.png" style="width: 100%;">
-    <img src="img/2024-07-14-19-22-45.png" style="width: 100%;">
-    <img src="img/2024-07-14-19-23-50.png" style="width: 100%;">
-    <img src="img/2024-07-14-19-24-12.png" style="width: 100%;">
-    <img src="img/2024-07-14-19-24-49.png" style="width: 100%;">
-</div>
+<table>
+  <tr>
+    <td><img src="img/2024-07-14-19-23-19.png" alt="Morse Code Translator screenshot 1"></td>
+    <td><img src="img/2024-07-14-19-22-45.png" alt="Morse Code Translator screenshot 2"></td>
+  </tr>
+  <tr>
+    <td><img src="img/2024-07-14-19-23-50.png" alt="Morse Code Translator screenshot 3"></td>
+    <td><img src="img/2024-07-14-19-24-12.png" alt="Morse Code Translator screenshot 4"></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><img src="img/2024-07-14-19-24-49.png" alt="Morse Code Translator screenshot 5"></td>
+  </tr>
+</table>
 
 ## Usage 🚀
 
